@@ -1,6 +1,10 @@
 {-# LANGUAGE DeriveFunctor, PackageImports #-}
 
-module LogicDB.JSONF where
+module LogicDB.JSONF 
+    ( ValueF(..)
+    , fromAeson, toAeson
+    )
+where
 
 import qualified Data.HashMap.Strict as HashMap
 import Data.Hashable
