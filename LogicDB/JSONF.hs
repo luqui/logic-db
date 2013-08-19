@@ -1,8 +1,8 @@
-{-# LANGUAGE DeriveFunctor, DeriveFoldable, DeriveTraversable, PackageImports #-}
+{-# LANGUAGE DeriveFunctor, DeriveFoldable, DeriveTraversable, PackageImports, PatternGuards #-}
 
 module LogicDB.JSONF 
     ( ValueF(..)
-    , fromAeson, toAeson, abstract
+    , fromAeson, toAeson, abstract, inject
     )
 where
 
@@ -32,22 +32,25 @@ fromAeson :: Aeson.Value -> Free ValueF a
 fromAeson = abstract (const Nothing)
 
 toAeson :: Free ValueF Void -> Aeson.Value
-toAeson (Free (Object obj))  = Aeson.Object (toAeson <$> obj)
-toAeson (Free (Array array)) = Aeson.Array (toAeson <$> array)
-toAeson (Free (String t))    = Aeson.String t
-toAeson (Free (Number n))    = Aeson.Number n
-toAeson (Free (Bool b))      = Aeson.Bool b
-toAeson (Free Null)          = Aeson.Null
--- toAeson (Pure ())         -- impossible
+toAeson = inject absurd
 
 abstract :: (Aeson.Value -> Maybe a) -> Aeson.Value -> Free ValueF a
-abstract f v | Just x <- f v = Pure x
+abstract f v | Just x <- f v    = Pure x
 abstract f (Aeson.Object obj)   = Free . Object $ abstract f <$> obj
 abstract f (Aeson.Array array)  = Free . Array  $ abstract f <$> array
 abstract _ (Aeson.String t)     = Free . String $ t
 abstract _ (Aeson.Number n)     = Free . Number $ n
 abstract _ (Aeson.Bool b)       = Free . Bool $ b
 abstract _ Aeson.Null           = Free Null
+
+inject :: (a -> Aeson.Value) -> Free ValueF a -> Aeson.Value
+inject f (Pure x)             = f x
+inject f (Free (Object obj))  = Aeson.Object (inject f <$> obj)
+inject f (Free (Array array)) = Aeson.Array (inject f <$> array)
+inject f (Free (String t))    = Aeson.String t
+inject f (Free (Number n))    = Aeson.Number n
+inject f (Free (Bool b))      = Aeson.Bool b
+inject f (Free Null)          = Aeson.Null
 
 
 instance FZip ValueF where
