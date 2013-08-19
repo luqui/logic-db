@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
 
+import Prelude hiding (mapM_)
 import LogicDB.Database
 import LogicDB.FZip
 import Data.Foldable
@@ -39,4 +40,4 @@ asList :: [a] -> [a]
 asList = id
 
 main = do
-    print . asList $ solve testDB ["X"] [Prop "parent" (tobj "tuple" [Pure "X", tobj "sue" []])] "???"
+    mapM_ print . asList $ solve testDB ["X","Y"] [Prop "child" (tobj "tuple" [Pure "X", Pure "Y"])] "???"

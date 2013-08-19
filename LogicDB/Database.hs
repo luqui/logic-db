@@ -31,11 +31,14 @@ makeMapping = (Map.!) . Map.fromList
 makeAlloc :: (Ord v, Functor m, Monad m) => [v] -> Solver.Solver obj lv m (v -> lv)
 makeAlloc = fmap makeMapping . mapM (\var -> (var,) <$> Solver.alloc)
 
+tryEach :: (MonadPlus m) => [a] -> (a -> m b) -> m b
+tryEach xs f = msum . map f $ xs
+
 solve1 :: (FZip obj, Traversable obj, Functor m, MonadPlus m, Ord k, Ord v, Ord lv)
        => Database k obj v -> Prop k obj lv -> Solver.Solver obj lv m ()
 solve1 db (Prop pred arg) = do
     let rules = maybe [] id $ Map.lookup pred (dbRules db)
-    forM_ rules $ \(Rule vars (Prop _ conObj) hyps) -> do
+    tryEach rules $ \(Rule vars (Prop _ conObj) hyps) -> do
         vmap <- makeAlloc vars
         Solver.unify arg (vmap <$> conObj)
         mapM_ (solve1 db . fmap vmap) hyps
