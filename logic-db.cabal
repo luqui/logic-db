@@ -17,7 +17,7 @@ cabal-version:       >=1.8
 
 executable test
   main-is:             Main.hs
-  exposed-modules:     LogicDB.UnificationSolver, 
+  other-modules:     LogicDB.UnificationSolver, 
                        LogicDB.JSONF,
                        LogicDB.FZip,
                        LogicDB.Database
@@ -32,4 +32,6 @@ executable test
                        text ==0.11.2.3,
                        hashable ==1.2.0.10,
                        unordered-containers ==0.2.3.1,
-                       void ==0.6.1
+                       void ==0.6.1,
+                       scotty ==0.4.6,
+                       bytestring ==0.10.0.2

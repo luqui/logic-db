@@ -1,43 +1,26 @@
-{-# LANGUAGE DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
+{-# LANGUAGE DeriveFunctor, DeriveFoldable, DeriveTraversable, OverloadedStrings #-}
 
 import Prelude hiding (mapM_)
-import LogicDB.Database
-import LogicDB.FZip
+import qualified LogicDB.Database as DB
 import Data.Foldable
 import Data.Traversable
 import Control.Applicative
 import Control.Monad.Free
 import qualified Data.Map as Map
+import Data.Monoid (Monoid(..))
+import qualified Data.Text.Lazy as Text
+import qualified Data.Text.Lazy.Encoding as Text
+import qualified Data.ByteString as BS
 
-data TestObj a = TestObj String [a]
-    deriving (Show, Functor, Foldable, Traversable)
+import qualified Web.Scotty as Scotty
+import Data.IORef
 
-instance FZip TestObj where
-    fzip (TestObj name xs) (TestObj name' xs')
-        | name /= name' = empty
-        | otherwise = TestObj name <$> fzip xs xs'
-
-tobj :: String -> [Free TestObj a] -> Free TestObj a
-tobj name vars = Free (TestObj name vars)
-
-testDB :: Database String TestObj String
-testDB = Database {
-    dbRules = Map.fromList [
-        "parent" --> [
-            Rule [] (Prop "parent" (tobj "tuple" [tobj "luke" [], tobj "sue" []])) [],
-            Rule [] (Prop "parent" (tobj "tuple" [tobj "luke" [], tobj "rob" []])) []
-        ],
-        "child" --> [
-            Rule ["X","Y"] (Prop "child" (tobj "tuple" [Pure "X", Pure "Y"]))
-                [ Prop "parent" (tobj "tuple" [Pure "Y", Pure "X"]) ]
-        ]
-    ]
-}
-    where
-    (-->) = (,)
-
-asList :: [a] -> [a]
-asList = id
+import qualified Data.Aeson as Aeson
 
 main = do
-    mapM_ print . asList $ solve testDB ["X","Y"] [Prop "child" (tobj "tuple" [Pure "X", Pure "Y"])] "???"
+    dbRef <- newIORef $ DB.Database { DB.dbRules = Map.empty }
+    
+    Scotty.scotty 3000 $ do
+        Scotty.post "/insert" $ do
+            jbody <- Scotty.jsonData
+            Scotty.json (jbody :: Aeson.Value)

@@ -2,7 +2,7 @@
 
 module LogicDB.JSONF 
     ( ValueF(..)
-    , fromAeson, toAeson
+    , fromAeson, toAeson, abstract
     )
 where
 
@@ -29,12 +29,7 @@ data ValueF a
     deriving (Functor, Foldable, Traversable)
 
 fromAeson :: Aeson.Value -> Free ValueF a
-fromAeson (Aeson.Object obj)   = Free . Object $ fromAeson <$> obj
-fromAeson (Aeson.Array array)  = Free . Array  $ fromAeson <$> array
-fromAeson (Aeson.String t)     = Free . String $ t
-fromAeson (Aeson.Number n)     = Free . Number $ n
-fromAeson (Aeson.Bool b)       = Free . Bool $ b
-fromAeson Aeson.Null           = Free Null
+fromAeson = abstract (const Nothing)
 
 toAeson :: Free ValueF Void -> Aeson.Value
 toAeson (Free (Object obj))  = Aeson.Object (toAeson <$> obj)
@@ -44,6 +39,15 @@ toAeson (Free (Number n))    = Aeson.Number n
 toAeson (Free (Bool b))      = Aeson.Bool b
 toAeson (Free Null)          = Aeson.Null
 -- toAeson (Pure ())         -- impossible
+
+abstract :: (Aeson.Value -> Maybe a) -> Aeson.Value -> Free ValueF a
+abstract f v | Just x <- f v = Pure x
+abstract f (Aeson.Object obj)   = Free . Object $ abstract f <$> obj
+abstract f (Aeson.Array array)  = Free . Array  $ abstract f <$> array
+abstract _ (Aeson.String t)     = Free . String $ t
+abstract _ (Aeson.Number n)     = Free . Number $ n
+abstract _ (Aeson.Bool b)       = Free . Bool $ b
+abstract _ Aeson.Null           = Free Null
 
 
 instance FZip ValueF where
