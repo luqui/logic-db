@@ -15,8 +15,8 @@ category:            Database
 build-type:          Simple
 cabal-version:       >=1.8
 
-library
-  -- main-is:             
+executable test
+  main-is:             Main.hs
   exposed-modules:     LogicDB.UnificationSolver, 
                        LogicDB.JSONF,
                        LogicDB.FZip,
