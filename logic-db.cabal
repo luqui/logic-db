@@ -19,7 +19,8 @@ library
   -- main-is:             
   exposed-modules:     LogicDB.UnificationSolver, 
                        LogicDB.JSONF,
-                       LogicDB.FZip
+                       LogicDB.FZip,
+                       LogicDB.Database
   build-depends:       base ==4.6.*, 
                        free ==3.4.1, 
                        transformers ==0.3.0.0,

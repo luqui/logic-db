@@ -83,14 +83,12 @@ assign v obj
     | otherwise = Solver . modify $ \s -> 
         s { ssSubst = Map.insert v obj (subst (Map.singleton v obj) <$> ssSubst s) }
 
-instantiate :: (Traversable f, Functor m, Monad m) 
-            => (a -> Maybe v) -> f a -> Solver obj v m (f v)
-instantiate pick = traverse f
-    where
-    f x | Just v <- pick x = return v
-        | otherwise        = alloc
+instantiate :: (Monad m) => (a -> Maybe v) -> a -> Solver obj v m v
+instantiate pick x
+    | Just v <- pick x = return v
+    | otherwise        = alloc
 
-runSolver :: (Monad m) => (forall v. Solver obj v m a) -> m a
+runSolver :: (Monad m) => (forall v. (Ord v) => Solver obj v m a) -> m a
 runSolver (Solver solver) = flip evalStateT s0 $ solver
     where
     s0 = SolverState { ssFresh = Supply 0 succ id, ssSubst = Map.empty }
