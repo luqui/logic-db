@@ -9,6 +9,7 @@ module LogicDB.UnificationSolver
     , unify
     , instantiate
     , runSolver
+    , mapSolver
     )
 where
 
@@ -45,6 +46,9 @@ type Weight = Integer
 
 newtype Solver obj v m a = Solver { unSolver :: StateT (SolverState obj v) m a }
     deriving (Functor, Applicative, Alternative, Monad, MonadPlus, MonadTrans)
+
+mapSolver :: (forall a. m a -> n a) -> Solver obj v m a -> Solver obj v n a
+mapSolver f = Solver . mapStateT f . unSolver
 
 alloc :: (Monad m) => Solver obj v m v
 alloc = Solver $ do

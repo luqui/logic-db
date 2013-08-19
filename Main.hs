@@ -16,6 +16,7 @@ import qualified Data.ByteString as BS
 import qualified Data.HashMap.Strict as HashMap
 import Data.Maybe (fromJust)
 import Control.Monad.IO.Class
+import qualified Control.Monad.WeightedSearch as WS
 
 import qualified Web.Scotty as Scotty
 import Data.IORef
@@ -48,18 +49,20 @@ instance Aeson.FromJSON Rule where
 data Query = Query
     { queryVars        :: [Text]
     , queryConstraints :: [Prop]
+    , queryLimit       :: Maybe Int
     }
 
 instance Aeson.FromJSON Query where
     parseJSON (Aeson.Object v) =
         Query <$> v .: "variables"
               <*> v .: "constraints"
+              <*> v .:? "limit" .!= Nothing
 
 makeProp :: [Text] -> Prop -> DB.Prop Text JSONF.ValueF Text
 makeProp vars prop = DB.Prop (propHead prop) (JSONF.abstract p (propValue prop))
     where
     p (Aeson.String x) | x `elem` vars = Just x
-                       | otherwise     = Nothing
+    p _ = Nothing
 
 makeRule :: Rule -> DB.Rule Text JSONF.ValueF Text
 makeRule rule = DB.Rule vars (makeProp vars (ruleConclusion rule))
@@ -70,8 +73,12 @@ makeRule rule = DB.Rule vars (makeProp vars (ruleConclusion rule))
 modifyIORefA :: IORef a -> (a -> a) -> IO ()
 modifyIORefA ref f = atomicModifyIORef ref (\x -> (f x, ()))
 
-asList :: [a] -> [a]
-asList = id
+limit :: Maybe Int -> [a] -> [a]
+limit Nothing = id
+limit (Just n) = take n
+
+runWS :: WS.T Integer a -> [a]
+runWS = toList
 
 main = do
     dbRef <- newIORef $ DB.Database { DB.dbRules = Map.empty }
@@ -88,4 +95,4 @@ main = do
             db <- liftIO $ readIORef dbRef
             let vars = queryVars q
             let results = DB.solve db vars (map (makeProp vars) (queryConstraints q)) Aeson.Null
-            Scotty.json . asList $ (fmap.fmap) (JSONF.inject id) results
+            Scotty.json . limit (queryLimit q) . runWS $ (fmap.fmap) (JSONF.inject id) results
