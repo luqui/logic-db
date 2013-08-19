@@ -17,7 +17,9 @@ cabal-version:       >=1.8
 
 library
   -- main-is:             
-  exposed-modules:     LogicDB.UnificationSolver, LogicDB.JSONF
+  exposed-modules:     LogicDB.UnificationSolver, 
+                       LogicDB.JSONF,
+                       LogicDB.FZip
   build-depends:       base ==4.6.*, 
                        free ==3.4.1, 
                        transformers ==0.3.0.0,

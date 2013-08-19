@@ -23,24 +23,7 @@ import Control.Monad.Trans.State
 import Control.Arrow
 import Control.Monad.Free (Free(..))
 import Control.Monad (MonadPlus(..))
-
-
-class (Functor f) => FZip f where
-    fzip :: (Alternative m) => f a -> f b -> m (f (a,b))
-
-instance FZip Maybe where
-    fzip Nothing Nothing = pure Nothing
-    fzip (Just x) (Just y) = pure (Just (x,y))
-    fzip _ _ = empty
-
-instance FZip [] where
-    fzip [] [] = pure []
-    fzip (x:xs) (y:ys) = ((x,y):) <$> fzip xs ys
-    fzip _ _ = empty
-
-
-
-
+import LogicDB.FZip
 
 data Supply a = forall s. Supply s (s -> s) (s -> a)
 
@@ -49,7 +32,6 @@ instance Functor Supply where
 
 supply :: Supply a -> (a, Supply a)
 supply (Supply s t v) = s `seq` (v s, Supply (t s) t v)
-
 
 
 type Substitution obj v = Map.Map v (Free obj v)

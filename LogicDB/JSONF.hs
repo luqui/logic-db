@@ -14,10 +14,8 @@ import Data.Attoparsec.Number (Number)
 import qualified Data.Aeson as Aeson
 import Control.Applicative
 import qualified LogicDB.UnificationSolver as Solver
-import LogicDB.UnificationSolver (FZip(..))
+import LogicDB.FZip
 import Data.Traversable
-import Control.Monad (join)
-import qualified Data.Set as Set
 import Control.Monad.Free (Free(..))
 import Data.Void (Void, absurd)
 
@@ -47,21 +45,6 @@ toAeson (Free (Bool b))      = Aeson.Bool b
 toAeson (Free Null)          = Aeson.Null
 -- toAeson (Pure ())         -- impossible
 
-
--- CodeShare Snippet http://www.codeshare.co/442/1/
-equalAsSets :: (Ord a) => [a] -> [a] -> Bool
-equalAsSets xs ys = Set.fromList xs == Set.fromList ys
--- End CodeShare Snippet
-
-instance (Ord k, Hashable k) => FZip (HashMap.HashMap k) where
-    fzip hm1 hm2
-        | not (HashMap.keys hm1 `equalAsSets` HashMap.keys hm2) = empty
-        | otherwise = pure $ HashMap.intersectionWith (,) hm1 hm2
-
-instance FZip Vector.Vector where
-    fzip v1 v2
-        | Vector.length v1 /= Vector.length v2 = empty
-        | otherwise = pure $ Vector.zip v1 v2
 
 instance FZip ValueF where
     fzip (Object a) (Object b) = Object <$> fzip a b
