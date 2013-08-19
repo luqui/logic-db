@@ -16,9 +16,9 @@ import Prelude hiding (mapM_, elem)
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 import Control.Applicative
-import qualified Control.Monad.WeightedSearch as WS
 import Data.Foldable
 import Data.Traversable
+import Control.Monad.Trans.Class
 import Control.Monad.Trans.State
 import Control.Arrow
 import Control.Monad.Free (Free(..))
@@ -43,10 +43,10 @@ data SolverState obj v = SolverState {
 
 type Weight = Integer
 
-newtype Solver obj v a = Solver { unSolver :: StateT (SolverState obj v) (WS.T Weight) a }
-    deriving (Functor, Applicative, Alternative, Monad, MonadPlus)
+newtype Solver obj v m a = Solver { unSolver :: StateT (SolverState obj v) m a }
+    deriving (Functor, Applicative, Alternative, Monad, MonadPlus, MonadTrans)
 
-alloc :: Solver obj v v
+alloc :: (Monad m) => Solver obj v m v
 alloc = Solver $ do
     s <- get
     let sup = ssFresh s
@@ -61,12 +61,13 @@ subst sub = (doSub =<<)
         | Just y <- Map.lookup x sub = y
         | otherwise = return x
     
-normalize :: (Ord v, Functor obj) => Free obj v -> Solver obj v (Free obj v)
+normalize :: (Ord v, Functor obj, Monad m) => Free obj v -> Solver obj v m (Free obj v)
 normalize obj = Solver $ do
     sub <- gets ssSubst
     return $ subst sub obj
 
-unify :: (FZip obj, Foldable obj, Ord v) => Free obj v -> Free obj v -> Solver obj v ()
+unify :: (FZip obj, Foldable obj, Ord v, Functor m, MonadPlus m) 
+      => Free obj v -> Free obj v -> Solver obj v m ()
 unify x y = do
     x' <- normalize x
     y' <- normalize y
@@ -76,20 +77,21 @@ unify x y = do
         (obj, Pure v)               -> assign v obj
         (Free obj, Free obj')       -> mapM_ (uncurry unify) =<< fzip obj obj'
 
-assign :: (Functor obj, Foldable obj, Ord v) => v -> Free obj v -> Solver obj v ()
+assign :: (Functor obj, Foldable obj, Ord v, Monad m) => v -> Free obj v -> Solver obj v m ()
 assign v obj
     | v `elem` obj = fail "Infinite object"
     | otherwise = Solver . modify $ \s -> 
         s { ssSubst = Map.insert v obj (subst (Map.singleton v obj) <$> ssSubst s) }
 
-instantiate :: (Traversable f) => (a -> Maybe v) -> f a -> Solver obj v (f v)
+instantiate :: (Traversable f, Functor m, Monad m) 
+            => (a -> Maybe v) -> f a -> Solver obj v m (f v)
 instantiate pick = traverse f
     where
     f x | Just v <- pick x = return v
         | otherwise        = alloc
 
-runSolver :: (forall v. Solver obj v a) -> [a]
-runSolver (Solver solver) = toList . flip evalStateT s0 $ solver
+runSolver :: (Monad m) => (forall v. Solver obj v m a) -> m a
+runSolver (Solver solver) = flip evalStateT s0 $ solver
     where
     s0 = SolverState { ssFresh = Supply 0 succ id, ssSubst = Map.empty }
 

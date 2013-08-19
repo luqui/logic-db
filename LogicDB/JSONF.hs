@@ -13,7 +13,6 @@ import qualified Data.Vector as Vector
 import Data.Attoparsec.Number (Number)
 import qualified Data.Aeson as Aeson
 import Control.Applicative
-import qualified LogicDB.UnificationSolver as Solver
 import LogicDB.FZip
 import Data.Foldable
 import Data.Traversable
