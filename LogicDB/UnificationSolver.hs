@@ -1,4 +1,4 @@
-{-# LANGUAGE ExistentialQuantification, GeneralizedNewtypeDeriving, RankNTypes #-}
+{-# LANGUAGE ExistentialQuantification, GeneralizedNewtypeDeriving, RankNTypes, PatternGuards #-}
 
 module LogicDB.UnificationSolver 
     ( FZip(..)
@@ -16,17 +16,17 @@ import Prelude hiding (mapM_, elem)
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 import Control.Applicative
-import Control.Monad (liftM, MonadPlus(..))
 import qualified Control.Monad.WeightedSearch as WS
 import Data.Foldable
 import Data.Traversable
 import Control.Monad.Trans.State
 import Control.Arrow
 import Control.Monad.Free (Free(..))
+import Control.Monad (MonadPlus(..))
 
 
 class (Functor f) => FZip f where
-    fzip :: (Alternative m, MonadPlus m) => f a -> f b -> m (f (a,b))
+    fzip :: (Alternative m) => f a -> f b -> m (f (a,b))
 
 instance FZip Maybe where
     fzip Nothing Nothing = pure Nothing

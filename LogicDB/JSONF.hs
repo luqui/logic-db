@@ -14,23 +14,24 @@ import LogicDB.UnificationSolver (FZip(..))
 import Data.Traversable
 import Control.Monad (join)
 import qualified Data.Set as Set
+import Control.Monad.Free (Free(..))
 
 data ValueF a
-    = Object (HashMap.HashMap Text.Text (ValueF a))
-    | Array  (Vector.Vector (ValueF a))
+    = Object (HashMap.HashMap Text.Text a)
+    | Array  (Vector.Vector a)
     | String Text.Text
     | Number Number
     | Bool   Bool
     | Null
     deriving (Functor)
 
-fromAeson :: Aeson.Value -> ValueF a
-fromAeson (Aeson.Object obj)   = Object (fromAeson <$> obj)
-fromAeson (Aeson.Array array)  = Array  (fromAeson <$> array)
-fromAeson (Aeson.String t)     = String t
-fromAeson (Aeson.Number n)     = Number n
-fromAeson (Aeson.Bool b)       = Bool b
-fromAeson Aeson.Null           = Null
+fromAeson :: Aeson.Value -> Free ValueF a
+fromAeson (Aeson.Object obj)   = Free . Object $ fromAeson <$> obj
+fromAeson (Aeson.Array array)  = Free . Array  $ fromAeson <$> array
+fromAeson (Aeson.String t)     = Free . String $ t
+fromAeson (Aeson.Number n)     = Free . Number $ n
+fromAeson (Aeson.Bool b)       = Free . Bool $ b
+fromAeson Aeson.Null           = Free Null
 
 -- CodeShare Snippet http://www.codeshare.co/442/1/
 equalAsSets :: (Ord a) => [a] -> [a] -> Bool
@@ -48,8 +49,8 @@ instance FZip Vector.Vector where
         | otherwise = pure $ Vector.zip v1 v2
 
 instance FZip ValueF where
-    fzip (Object a) (Object b) = Object <$> join (sequenceA <$> (fmap (uncurry fzip) <$> fzip a b))
-    fzip (Array a) (Array b)   = Array  <$> join (sequenceA <$> (fmap (uncurry fzip) <$> fzip a b))
+    fzip (Object a) (Object b) = Object <$> fzip a b
+    fzip (Array a) (Array b)   = Array  <$> fzip a b
     fzip (String a) (String b) = String <$> fzipConst a b
     fzip (Number a) (Number b) = Number <$> fzipConst a b
     fzip (Bool a) (Bool b)     = Bool   <$> fzipConst a b
@@ -60,4 +61,3 @@ fzipConst :: (Eq a, Alternative m) => a -> a -> m a
 fzipConst a b 
     | a == b = pure a
     | otherwise = empty
-        
