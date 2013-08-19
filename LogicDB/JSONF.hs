@@ -15,6 +15,7 @@ import Data.Traversable
 import Control.Monad (join)
 import qualified Data.Set as Set
 import Control.Monad.Free (Free(..))
+import Data.Void (Void, absurd)
 
 data ValueF a
     = Object (HashMap.HashMap Text.Text a)
@@ -32,6 +33,16 @@ fromAeson (Aeson.String t)     = Free . String $ t
 fromAeson (Aeson.Number n)     = Free . Number $ n
 fromAeson (Aeson.Bool b)       = Free . Bool $ b
 fromAeson Aeson.Null           = Free Null
+
+toAeson :: Free ValueF Void -> Aeson.Value
+toAeson (Free (Object obj))  = Aeson.Object (toAeson <$> obj)
+toAeson (Free (Array array)) = Aeson.Array (toAeson <$> array)
+toAeson (Free (String t))    = Aeson.String t
+toAeson (Free (Number n))    = Aeson.Number n
+toAeson (Free (Bool b))      = Aeson.Bool b
+toAeson (Free Null)          = Aeson.Null
+-- toAeson (Pure ())         -- impossible
+
 
 -- CodeShare Snippet http://www.codeshare.co/442/1/
 equalAsSets :: (Ord a) => [a] -> [a] -> Bool
