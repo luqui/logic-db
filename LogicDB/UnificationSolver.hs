@@ -26,17 +26,19 @@ import Control.Monad.Free (Free(..))
 
 
 class (Functor f) => FZip f where
-    fzip :: (MonadPlus m) => f a -> f b -> m (f (a,b))
+    fzip :: (Alternative m, MonadPlus m) => f a -> f b -> m (f (a,b))
 
 instance FZip Maybe where
-    fzip Nothing Nothing = return Nothing
-    fzip (Just x) (Just y) = return (Just (x,y))
-    fzip _ _ = mzero
+    fzip Nothing Nothing = pure Nothing
+    fzip (Just x) (Just y) = pure (Just (x,y))
+    fzip _ _ = empty
 
 instance FZip [] where
-    fzip [] [] = return []
-    fzip (x:xs) (y:ys) = liftM ((x,y):) (fzip xs ys)
-    fzip _ _ = mzero
+    fzip [] [] = pure []
+    fzip (x:xs) (y:ys) = ((x,y):) <$> fzip xs ys
+    fzip _ _ = empty
+
+
 
 
 
