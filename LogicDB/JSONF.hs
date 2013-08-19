@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveFunctor, PackageImports #-}
+{-# LANGUAGE DeriveFunctor, DeriveFoldable, DeriveTraversable, PackageImports #-}
 
 module LogicDB.JSONF 
     ( ValueF(..)
@@ -15,6 +15,7 @@ import qualified Data.Aeson as Aeson
 import Control.Applicative
 import qualified LogicDB.UnificationSolver as Solver
 import LogicDB.FZip
+import Data.Foldable
 import Data.Traversable
 import Control.Monad.Free (Free(..))
 import Data.Void (Void, absurd)
@@ -26,7 +27,7 @@ data ValueF a
     | Number Number
     | Bool   Bool
     | Null
-    deriving (Functor)
+    deriving (Functor, Foldable, Traversable)
 
 fromAeson :: Aeson.Value -> Free ValueF a
 fromAeson (Aeson.Object obj)   = Free . Object $ fromAeson <$> obj
