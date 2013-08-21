@@ -45,9 +45,6 @@ lineTokenize = filter (not . blank) . indentMToTokens
     where
     blank = all Char.isSpace
 
-
-deriving instance (Show (f a), Show (g a)) => Show (F.Coproduct f g a)
-
 tok :: Parser a -> Parser a
 tok p = p <* P.spaces
 
@@ -65,14 +62,21 @@ struct inj p = Struct . Map.fromList <$>
     proc i Nothing = (i, inj i)
     proc i (Just a) = (i, a)
 
+
 type Object = F.Coproduct (Struct String) JS.JavascriptF
 type Prop = DB.Prop Pred Object String
 type Rule = DB.Rule Pred Object String
 type Pred = String
 type Error = Either String
 
+structObj :: Struct String a -> Object a
+structObj = F.left
+
+jsObj :: JS.JavascriptF a -> Object a
+jsObj = F.right
+
 prop :: Parser Prop
-prop = DB.Prop <$> identifier <*> (Free . F.left <$> struct Pure structOrVar)
+prop = DB.Prop <$> identifier <*> (Free . structObj <$> struct Pure structOrVar)
 
 purifyJS :: Free Object a -> Maybe (Free JS.JavascriptF a)
 purifyJS (Pure x) = Just (Pure x)
@@ -84,14 +88,14 @@ closed = traverse (const Nothing)
 structOrVar :: Parser (Free Object String)
 structOrVar = nestedStruct <|> Pure <$> identifier
     where
-    nestedStruct = Free . F.left <$> struct Pure structOrVar
+    nestedStruct = Free . structObj <$> struct Pure structOrVar
 
 object :: Parser (Object String)
 object = do
     code <- P.many P.anyChar
     case JS.fromJS code of 
         Left err -> fail err
-        Right jsf -> pure . F.right $ jsf
+        Right jsf -> pure . jsObj $ jsf
 
 defn :: Parser (String, Object String)
 defn = (,) <$> identifier <* symbol "=" <*> object
