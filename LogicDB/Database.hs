@@ -14,9 +14,14 @@ import LogicDB.FZip
 data Prop k obj v = Prop k (Free obj v)
     deriving (Functor, Foldable, Traversable)
 
+inProp :: (Free obj v -> Free obj' v') -> Prop k obj v -> Prop k obj' v'
+inProp f (Prop k m) = Prop k (f m)
+
 deriving instance (Show k, Show (Free obj v)) => Show (Prop k obj v)
 
 data Rule k obj v = Rule [v] (Prop k obj v) [Prop k obj v]
+
+deriving instance (Show k, Show v, Show (Free obj v)) => Show (Rule k obj v)
 
 data Database k obj v = Database {
     dbRules :: Map.Map k [Rule k obj v]

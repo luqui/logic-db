@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveFunctor, DeriveFoldable, DeriveTraversable, GeneralizedNewtypeDeriving, StandaloneDeriving, FlexibleContexts #-}
+{-# LANGUAGE DeriveFunctor, DeriveFoldable, DeriveTraversable, GeneralizedNewtypeDeriving, StandaloneDeriving, FlexibleContexts, PatternGuards #-}
 
 module LogicDB.Parser where
 
@@ -7,6 +7,7 @@ import PreludePlus
 import qualified Text.Parsec as P
 import qualified Text.Parsec.Token as P
 import qualified Data.Map as Map
+import qualified Data.Set as Set
 import qualified Data.DList as DList
 import qualified Data.Functor.Coproduct as F
 import qualified Data.Char as Char
@@ -66,7 +67,9 @@ struct inj p = Struct . Map.fromList <$>
 
 type Object = F.Coproduct (Struct String) JS.JavascriptF
 type Prop = DB.Prop Pred Object String
+type Rule = DB.Rule Pred Object String
 type Pred = String
+type Error = Either String
 
 prop :: Parser Prop
 prop = DB.Prop <$> identifier <*> (Free . F.left <$> struct Pure structOrVar)
@@ -94,7 +97,7 @@ data Clause
     | Definition String (Object String)
     deriving Show
 
-parseClauses :: [String] -> Either String [Clause]
+parseClauses :: [String] -> Error [Clause]
 parseClauses = early
     where
     early [] = Right []
@@ -111,6 +114,29 @@ parseClauses = early
     
     lateClause = Conclusion <$> P.try prop <|> uncurry Definition <$> defn
 
-parseProgram :: [String] -> Either String [[Clause]]
-parseProgram = sequenceA . map parseClauses . Split.splitWhen ("==" `isPrefixOf`)
+parseRules :: [String] -> Error [[Clause]]
+parseRules = sequenceA . map parseClauses . Split.splitWhen ("==" `isPrefixOf`)
 
+clausesToRule :: [Clause] -> Error Rule
+clausesToRule clauses = do
+    [con] <- return [ p | Conclusion p <- clauses ]
+    let hyps = [ p | Hypothesis p <- clauses ]
+    let defns = Map.fromList [ (k, substFree defns . Free . fmap Pure $ v) 
+                             | Definition k v <- clauses ]
+    let con' = DB.inProp (substFree defns) con
+    let hyps' = map (DB.inProp (substFree defns)) hyps
+    let vars = sortNub $ toList con' ++ (toList =<< hyps') ++ (toList =<< Map.elems defns)
+    return $ DB.Rule vars con' hyps'
+
+parseProgram :: String -> Error [Rule]
+parseProgram = sequenceA . map clausesToRule <=< parseRules . lineTokenize 
+    
+    
+sortNub :: (Ord a) => [a] -> [a]
+sortNub = Set.toList . Set.fromList
+
+substFree :: (Ord k, Functor f) => Map.Map k (Free f k) -> Free f k -> Free f k
+substFree mp (Pure x)
+    | Just y <- Map.lookup x mp = y
+    | otherwise = Pure x
+substFree mp (Free f) = Free (substFree mp <$> f)

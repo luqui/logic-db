@@ -8,3 +8,12 @@ w = function() {
 }
 
 ===============
+
+Foo[ x, y, z: zk ]
+Bar[ y, x ]
+---------------
+Baz[ x, y, w ]
+
+w = function() {
+    return 42
+}
