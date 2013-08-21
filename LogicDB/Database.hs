@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveFunctor, DeriveFoldable, DeriveTraversable, TupleSections, FlexibleInstances #-}
+{-# LANGUAGE DeriveFunctor, DeriveFoldable, DeriveTraversable, TupleSections, FlexibleInstances, StandaloneDeriving, FlexibleContexts #-}
 
 module LogicDB.Database where
 
@@ -13,6 +13,8 @@ import LogicDB.FZip
 
 data Prop k obj v = Prop k (Free obj v)
     deriving (Functor, Foldable, Traversable)
+
+deriving instance (Show k, Show (Free obj v)) => Show (Prop k obj v)
 
 data Rule k obj v = Rule [v] (Prop k obj v) [Prop k obj v]
 

@@ -1,0 +1,10 @@
+Foo[ x, y, z ]
+Bar[ y, x ]
+---------------
+Baz[ x, y, w ]
+
+w = function() {
+    return 42
+}
+
+===============

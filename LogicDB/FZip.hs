@@ -9,6 +9,7 @@ import qualified Data.HashMap.Strict as HashMap
 import qualified Data.Vector as Vector
 import qualified Data.Map as Map
 import qualified Data.Set as Set
+import qualified Data.Functor.Coproduct as F
 
 class (Functor f) => FZip f where
     fzip :: (Alternative m) => f a -> f b -> m (f (a,b))
@@ -37,6 +38,11 @@ instance (Ord k) => FZip (Map.Map k) where
     fzip m1 m2
         | Map.keysSet m1 /= Map.keysSet m2 = empty
         | otherwise = pure $ Map.intersectionWith (,) m1 m2
+
+instance (FZip f, FZip g) => FZip (F.Coproduct f g) where
+    fzip (F.Coproduct (Left x)) (F.Coproduct (Left y)) = F.left <$> fzip x y
+    fzip (F.Coproduct (Right x)) (F.Coproduct (Right y)) = F.right <$> fzip x y
+    fzip _ _ = empty 
 
 -- CodeShare Snippet http://www.codeshare.co/442/1/
 equalAsSets :: (Ord a) => [a] -> [a] -> Bool
