@@ -7,6 +7,7 @@ import PreludePlus
 import Data.Hashable
 import qualified Data.HashMap.Strict as HashMap
 import qualified Data.Vector as Vector
+import qualified Data.Map as Map
 import qualified Data.Set as Set
 
 class (Functor f) => FZip f where
@@ -32,6 +33,10 @@ instance FZip Vector.Vector where
         | Vector.length v1 /= Vector.length v2 = empty
         | otherwise = pure $ Vector.zip v1 v2
 
+instance (Ord k) => FZip (Map.Map k) where
+    fzip m1 m2
+        | Map.keysSet m1 /= Map.keysSet m2 = empty
+        | otherwise = pure $ Map.intersectionWith (,) m1 m2
 
 -- CodeShare Snippet http://www.codeshare.co/442/1/
 equalAsSets :: (Ord a) => [a] -> [a] -> Bool

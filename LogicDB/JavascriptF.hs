@@ -1,6 +1,11 @@
 {-# LANGUAGE DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
 
-module LogicDB.JavascriptF where
+module LogicDB.JavascriptF 
+    ( JavascriptF
+    , fromJS
+    , toJS
+    )
+where
 
 import Prelude ()
 import PreludePlus
@@ -11,6 +16,7 @@ import Data.List (intercalate)
 import Data.Void (Void, absurd)
 
 import qualified LogicDB.JavascriptFreeVars as JSFV
+import LogicDB.FZip
 
 data JavascriptF a
     = JavascriptF String (Map.Map String a)
@@ -30,3 +36,8 @@ toJS (Free (JavascriptF code vars)) = concat
     , intercalate "," [ n ++ ": " ++ toJS v | (n,v) <- Map.assocs vars ]
     , "})"
     ]
+
+instance FZip JavascriptF where
+    fzip (JavascriptF code vars) (JavascriptF code' vars')
+        | code == code' = JavascriptF code <$> fzip vars vars'
+        | otherwise     = empty
