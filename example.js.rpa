@@ -3,7 +3,7 @@ Stream[ head, tail, cons ]
 
 head = function(s) { return s[0] }
 tail = function(s) { return s.slice(1) }
-cons = function(h,t) { return [h].append(t) }
+cons = function(h,t) { return [h].concat(t) }
 
 
 ==================
@@ -40,5 +40,5 @@ Stream[ head, tail, cons ]
 Example[ ex ]
 
 ex = function() { 
-    console.log(head(cons(0, null)));
+    return head(tail(cons(0,cons(1,null))));
 }
