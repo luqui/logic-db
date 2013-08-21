@@ -1,4 +1,4 @@
-Foo[ x, y, z ]
+Foo[ x, y, z: zk ]
 Bar[ y, x ]
 ---------------
 Baz[ x, y, w ]

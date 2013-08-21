@@ -69,7 +69,13 @@ type Prop = DB.Prop Pred Object String
 type Pred = String
 
 prop :: Parser Prop
-prop = DB.Prop <$> identifier <*> (Free . F.left <$> struct Pure (Free . fmap Pure <$> object))
+prop = DB.Prop <$> identifier <*> (Free . F.left <$> struct Pure structOrVar)
+
+
+structOrVar :: Parser (Free Object String)
+structOrVar = nestedStruct <|> Pure <$> identifier
+    where
+    nestedStruct = Free . F.left <$> struct Pure structOrVar
 
 object :: Parser (Object String)
 object = do
