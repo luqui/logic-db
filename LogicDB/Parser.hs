@@ -45,6 +45,7 @@ lineTokenize = filter (not . blank) . indentMToTokens
     where
     blank = all Char.isSpace
 
+
 tok :: Parser a -> Parser a
 tok p = p <* P.spaces
 
@@ -142,8 +143,11 @@ parseProgram :: String -> Error [Rule]
 parseProgram = sequenceA . map clausesToRule <=< parseRules . lineTokenize 
     
     
+-- CodeShare Snippet http://www.codeshare.co/450/3/
 sortNub :: (Ord a) => [a] -> [a]
-sortNub = Set.toList . Set.fromList
+sortNub = Data.Set.toList . Data.Set.fromList
+-- End CodeShare Snippet
+
 
 substFree :: (Ord k, Functor f) => Map.Map k (Free f k) -> Free f k -> Free f k
 substFree mp (Pure x)
