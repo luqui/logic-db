@@ -27,6 +27,9 @@ data Database k obj v = Database {
     dbRules :: Map.Map k [Rule k obj v]
     }
 
+emptyDB :: Database k obj v
+emptyDB = Database Map.empty
+
 class (MonadPlus m) => MonadDelay m where
     delay :: m a -> m a
 

@@ -1,19 +1,6 @@
-Foo[ x, y, z: zk ]
-Bar[ y, x ]
 ---------------
-Baz[ x, y, w ]
+FortyTwo[ f ]
 
-w = function() {
-    return 42
-}
-
-===============
-
-Foo[ x, y, z: zk ]
-Bar[ y, x ]
----------------
-Baz[ x, y, w ]
-
-w = function() {
+f = function() {
     return 42
 }

@@ -74,6 +74,12 @@ type Error = Either String
 prop :: Parser Prop
 prop = DB.Prop <$> identifier <*> (Free . F.left <$> struct Pure structOrVar)
 
+purifyJS :: Free Object a -> Maybe (Free JS.JavascriptF a)
+purifyJS (Pure x) = Just (Pure x)
+purifyJS (Free obj) = F.coproduct (const Nothing) (fmap Free . sequenceA . fmap purifyJS) obj
+
+closed :: (Traversable f) => Free f a -> Maybe (Free f b)
+closed = traverse (const Nothing)
 
 structOrVar :: Parser (Free Object String)
 structOrVar = nestedStruct <|> Pure <$> identifier
@@ -140,3 +146,9 @@ substFree mp (Pure x)
     | Just y <- Map.lookup x mp = y
     | otherwise = Pure x
 substFree mp (Free f) = Free (substFree mp <$> f)
+
+complete :: Parser a -> Parser a
+complete p = p <* P.eof
+
+parseSpec :: String -> Error [Prop]
+parseSpec = left show . P.parse (complete (P.many prop)) ""
