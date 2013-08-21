@@ -29,11 +29,12 @@ main = do
 
     let db = foldr DB.addRule DB.emptyDB rules
     let vars = toList =<< spec'
-    let results = DB.solve db vars spec' (JS.fromJS "null")
+    let results = DB.solve db vars spec' "null"
 
     putStrLn "Results:"
     forM_ (runWS results) $ \r -> do
         forM_ (Map.assocs r) $ \(k,v) -> do
-            Just js <- return $ fmap JS.toJS . closed =<< purifyJS v
-            putStrLn $ k ++ ": " ++ js
+            case JS.toJS <$> purifyJS v of
+                Just js -> putStrLn $ "var " ++ k ++ " = " ++ js ++ ";"
+                Nothing -> return ()
         putStrLn "--"

@@ -1,6 +1,44 @@
----------------
-FortyTwo[ f ]
+------------------
+Stream[ head, tail, cons ]
 
-f = function() {
-    return 42
+head = function(s) { return s[0] }
+tail = function(s) { return s.slice(1) }
+cons = function(h,t) { return [h].append(t) }
+
+
+==================
+
+------------------
+Thunk[ thunk ]
+
+thunk = function(f) { 
+    var cell = null;
+    return function() {
+        if (cell) {
+            return cell[0];
+        }
+        else {
+            cell = [f()];
+            return cell[0];
+        }
+    }
+}
+
+==================
+
+--------------
+Stream[ head, tail, cons ]
+
+head = function(s) { return s(function(h,t) { return h }) }
+tail = function(s) { return s(function(h,t) { return t }) }
+cons = function(h,t) { return function(f) { return f(h,t) } }
+
+==================
+
+Stream[ head, tail, cons ]
+-------------
+Example[ ex ]
+
+ex = function() { 
+    console.log(head(cons(0, null)));
 }
