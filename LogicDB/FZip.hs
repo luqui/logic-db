@@ -2,10 +2,11 @@ module LogicDB.FZip
     ( FZip(..) )
 where
 
-import qualified Data.HashMap.Strict as HashMap
+import Prelude ()
+import PreludePlus
 import Data.Hashable
+import qualified Data.HashMap.Strict as HashMap
 import qualified Data.Vector as Vector
-import Control.Applicative
 import qualified Data.Set as Set
 
 class (Functor f) => FZip f where

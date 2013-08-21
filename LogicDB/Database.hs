@@ -2,16 +2,14 @@
 
 module LogicDB.Database where
 
-import Prelude hiding (mapM, mapM_)
-import qualified Data.Map as Map
-import Control.Monad ((<=<), MonadPlus(..))
+import Prelude ()
+import PreludePlus
 import Control.Monad.Free
-import qualified LogicDB.UnificationSolver as Solver
-import Data.Foldable
-import Data.Traversable
-import LogicDB.FZip
-import Control.Applicative
 import qualified Control.Monad.WeightedSearch as WS
+import qualified Data.Map as Map
+
+import qualified LogicDB.UnificationSolver as Solver
+import LogicDB.FZip
 
 data Prop k obj v = Prop k (Free obj v)
     deriving (Functor, Foldable, Traversable)

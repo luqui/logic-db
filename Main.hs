@@ -17,6 +17,7 @@ import qualified Data.HashMap.Strict as HashMap
 import Data.Maybe (fromJust)
 import Control.Monad.IO.Class
 import qualified Control.Monad.WeightedSearch as WS
+import LogicDB.JavascriptF ()
 
 import qualified Web.Scotty as Scotty
 import Data.IORef

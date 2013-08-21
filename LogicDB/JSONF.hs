@@ -6,18 +6,18 @@ module LogicDB.JSONF
     )
 where
 
+import Prelude ()
+import PreludePlus
 import qualified Data.HashMap.Strict as HashMap
 import Data.Hashable
 import qualified Data.Text as Text
 import qualified Data.Vector as Vector
 import Data.Attoparsec.Number (Number)
 import qualified Data.Aeson as Aeson
-import Control.Applicative
-import LogicDB.FZip
-import Data.Foldable
-import Data.Traversable
 import Control.Monad.Free (Free(..))
 import Data.Void (Void, absurd)
+
+import LogicDB.FZip
 
 data ValueF a
     = Object (HashMap.HashMap Text.Text a)

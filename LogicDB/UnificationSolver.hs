@@ -13,15 +13,13 @@ module LogicDB.UnificationSolver
     )
 where
 
-import Prelude hiding (mapM_, elem)
+import Prelude ()
+import PreludePlus
+
 import qualified Data.Map as Map
 import qualified Data.Set as Set
-import Control.Applicative
-import Data.Foldable
-import Data.Traversable
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.State
-import Control.Arrow
 import Control.Monad.Free (Free(..))
 import Control.Monad (MonadPlus(..))
 import LogicDB.FZip

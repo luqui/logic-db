@@ -17,10 +17,12 @@ cabal-version:       >=1.8
 
 executable test
   main-is:             Main.hs
-  other-modules:     LogicDB.UnificationSolver, 
+  other-modules:       LogicDB.UnificationSolver, 
                        LogicDB.JSONF,
                        LogicDB.FZip,
-                       LogicDB.Database
+                       LogicDB.Database,
+                       LogicDB.JavascriptF,
+                       LogicDB.JavascriptFreeVars
   build-depends:       base ==4.6.*, 
                        free ==3.4.1, 
                        transformers ==0.3.0.0,
@@ -34,4 +36,6 @@ executable test
                        unordered-containers ==0.2.3.1,
                        void ==0.6.1,
                        scotty ==0.4.6,
-                       bytestring ==0.10.0.2
+                       bytestring ==0.10.0.2,
+                       language-javascript ==0.5.7,
+                       syb ==0.4.0
