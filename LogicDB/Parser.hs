@@ -8,8 +8,8 @@ import qualified Text.Parsec as P
 import qualified Text.Parsec.Token as P
 import qualified Data.Map as Map
 import qualified Data.Set as Set
+import qualified Data.Set
 import qualified Data.DList as DList
-import qualified Data.Functor.Coproduct as F
 import qualified Data.Char as Char
 import Control.Monad.Free (Free(..))
 import qualified Data.List.Split as Split
@@ -64,39 +64,52 @@ struct inj p = Struct . Map.fromList <$>
     proc i (Just a) = (i, a)
 
 
-type Object = F.Coproduct (Struct String) JS.JavascriptF
+data Object a
+    = ObjStruct (Struct String a)
+    | ObjJavascript (JS.JavascriptF a)
+    | ObjSymbol String
+    deriving (Eq, Ord, Show, Functor, Foldable, Traversable)
+
+instance FZip Object where
+    fzip (ObjStruct s) (ObjStruct s') = ObjStruct <$> fzip s s'
+    fzip (ObjJavascript j) (ObjJavascript j') = ObjJavascript <$> fzip j j'
+    fzip (ObjSymbol s) (ObjSymbol s') 
+        | s == s' = pure $ ObjSymbol s
+        | otherwise = empty
+
 type Prop = DB.Prop Pred Object String
 type Rule = DB.Rule Pred Object String
 type Pred = String
 type Error = Either String
 
-structObj :: Struct String a -> Object a
-structObj = F.left
-
-jsObj :: JS.JavascriptF a -> Object a
-jsObj = F.right
-
 prop :: Parser Prop
-prop = DB.Prop <$> identifier <*> (Free . structObj <$> struct Pure structOrVar)
+prop = DB.Prop <$> identifier <*> (Free . ObjStruct <$> struct Pure inlineObject)
 
 purifyJS :: Free Object a -> Maybe (Free JS.JavascriptF a)
 purifyJS (Pure x) = Just (Pure x)
-purifyJS (Free obj) = F.coproduct (const Nothing) (fmap Free . sequenceA . fmap purifyJS) obj
+purifyJS (Free (ObjJavascript js)) = fmap Free . sequenceA . fmap purifyJS $ js
+purifyJS (Free _) = Nothing
 
 closed :: (Traversable f) => Free f a -> Maybe (Free f b)
 closed = traverse (const Nothing)
 
-structOrVar :: Parser (Free Object String)
-structOrVar = nestedStruct <|> Pure <$> identifier
+inlineObject :: Parser (Free Object String)
+inlineObject = P.choice [ nestedStruct
+                        , Pure <$> identifier
+                        , Free <$> sym
+                        ]
     where
-    nestedStruct = Free . structObj <$> struct Pure structOrVar
+    nestedStruct = Free . ObjStruct <$> struct Pure inlineObject
+
+sym :: Parser (Object a)
+sym = ObjSymbol <$> (symbol "'" *> identifier)
 
 object :: Parser (Object String)
 object = do
     code <- P.many P.anyChar
     case JS.fromJS code of 
         Left err -> fail err
-        Right jsf -> pure . jsObj $ jsf
+        Right jsf -> pure . ObjJavascript $ jsf
 
 defn :: Parser (String, Object String)
 defn = (,) <$> identifier <* symbol "=" <*> object
