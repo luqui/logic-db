@@ -4,6 +4,7 @@ module LogicDB.JavascriptF
     ( JavascriptF
     , fromJS
     , toJS
+    , literal
     )
 where
 
@@ -36,6 +37,9 @@ toJS (Free (JavascriptF code vars)) = concat
     , intercalate "," [ n ++ ": " ++ toJS v | (n,v) <- Map.assocs vars ]
     , "})"
     ]
+
+literal :: String -> JavascriptF a
+literal js = JavascriptF js Map.empty
 
 instance FZip JavascriptF where
     fzip (JavascriptF code vars) (JavascriptF code' vars')

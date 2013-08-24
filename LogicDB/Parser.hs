@@ -112,7 +112,12 @@ object = do
         Right jsf -> pure . ObjJavascript $ jsf
 
 defn :: Parser (String, Object String)
-defn = (,) <$> identifier <* symbol "=" <*> object
+defn = do
+    name <- identifier
+    obj <- P.choice [ symbol "=" *> object
+                    , ObjJavascript (JS.literal name) <$ symbol "literal"
+                    ]
+    return (name, obj)
 
 
 data Clause

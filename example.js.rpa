@@ -35,10 +35,19 @@ cons = function(h,t) { return function(f) { return f(h,t) } }
 
 ==================
 
+-------------
+Logger[ logger ]
+
+logger = console.log
+console literal
+
+==================
+
+Logger[ logger: log ]
 Stream[ head, tail, cons, style ]
 -------------
 Example[ ex, style ]
 
 ex = function() { 
-    return head(tail(cons(0,cons(1,null))));
+    log(head(tail(cons(0,cons(1,null)))));
 }
