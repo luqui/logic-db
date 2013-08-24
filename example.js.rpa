@@ -1,5 +1,5 @@
 ------------------
-Stream[ head, tail, cons ]
+Stream[ head, tail, cons, style: 'array ]
 
 head = function(s) { return s[0] }
 tail = function(s) { return s.slice(1) }
@@ -27,7 +27,7 @@ thunk = function(f) {
 ==================
 
 --------------
-Stream[ head, tail, cons ]
+Stream[ head, tail, cons, style: 'church ]
 
 head = function(s) { return s(function(h,t) { return h }) }
 tail = function(s) { return s(function(h,t) { return t }) }
@@ -35,9 +35,9 @@ cons = function(h,t) { return function(f) { return f(h,t) } }
 
 ==================
 
-Stream[ head, tail, cons ]
+Stream[ head, tail, cons, style ]
 -------------
-Example[ ex ]
+Example[ ex, style ]
 
 ex = function() { 
     return head(tail(cons(0,cons(1,null))));

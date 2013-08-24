@@ -1,3 +1,5 @@
+{-# LANGUAGE LambdaCase #-}
+
 module Main where
 
 import Prelude ()
@@ -16,6 +18,9 @@ runWS = toList
 
 main = do
     [file, spec] <- getArgs
+    rules <- parseProgram <$> readFile file >>= \case
+                    Left err -> fail err
+                    Right rules -> return rules
     Right rules <- parseProgram <$> readFile file
     Right spec' <- return $ parseSpec spec
     
