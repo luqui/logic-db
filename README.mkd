@@ -1,0 +1,41 @@
+I know it's called logic-db, but this has evolved into the latest implementation
+of what I'm now calling _relational program assembly_, or RPA.  Code in the
+small is written in a familiar procedural/functional style in the object language
+-- currently only javascript.  This system is about the large-scale organization
+of such code.  Instead of using classes, files, and namespaces, we organize
+around so-called _theories_, which are orchestrated in a logic-programming sort
+of way.  Essentially, a theory represents a relationship between object language
+snippets.  For example, in `example.js.rpa`, you'll see:
+
+    -----------
+    Stream[ head, tail, cons ]
+
+    head = ...
+    tail = ...
+    cons = ...
+
+This says that `head`, `tail`, and `cons`, are related in a way such that
+together they form the implementation of a stream.  In particular, we can expect
+
+    head(cons(x,y)) = x
+    tail(cons(x,y)) = y
+
+for any `x` and `y`.  There can be multiple implementations of this `Stream`
+relationship.  Then later, you'll see:
+
+    Stream[ head, tail, cons ]
+    -----------
+    Example[ ex ]
+
+Which says that for any three objects `head`, `tail`, and `cons` that together
+form a `Stream`, we can build an instance of the example program `ex`.
+
+Then a program is a collection of rules or implmenetations like these.  The
+advantage of organizing code like this (and the goal of this project) is a
+high level of potential reuse -- each piece of each project is explicit about
+its assumptions (the propositions that appear above the `-----` line), and we
+can transport it to another setting simply by implmenting its assumptions with
+whatever is compatible with the new project.
+
+After this system is improved more, I intend to write a short book about this
+way of designing. 
