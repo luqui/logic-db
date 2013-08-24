@@ -1,3 +1,9 @@
+// A Stream is a structure with head, tail, and cons, satisfying
+//   head(cons(x,y)) = x
+//   tail(cons(x,y)) = y
+
+// This is a javascript array-based implementation of streams.
+
 ------------------
 Stream[ head, tail, cons, style: 'array ]
 
@@ -5,8 +11,21 @@ head = function(s) { return s[0] }
 tail = function(s) { return s.slice(1) }
 cons = function(h,t) { return [h].concat(t) }
 
+==================
+
+// This is a church encoding implementation of streams.
+
+--------------
+Stream[ head, tail, cons, style: 'church ]
+
+head = function(s) { return s(function(h,t) { return h }) }
+tail = function(s) { return s(function(h,t) { return t }) }
+cons = function(h,t) { return function(f) { return f(h,t) } }
 
 ==================
+
+// A Thunk wraps around a pure function and caches the return value the
+// first time it is evaluated.
 
 ------------------
 Thunk[ thunk ]
@@ -24,16 +43,11 @@ thunk = function(f) {
     }
 }
 
-==================
-
---------------
-Stream[ head, tail, cons, style: 'church ]
-
-head = function(s) { return s(function(h,t) { return h }) }
-tail = function(s) { return s(function(h,t) { return t }) }
-cons = function(h,t) { return function(f) { return f(h,t) } }
 
 ==================
+
+// A logger simply provides a logger() function, which writes out some information
+// to a log.
 
 -------------
 Logger[ logger ]
@@ -42,6 +56,8 @@ logger = console.log
 console literal
 
 ==================
+
+// An example which logs "1", roundabout using a stream.
 
 Logger[ logger: log ]
 Stream[ head, tail, cons, style ]

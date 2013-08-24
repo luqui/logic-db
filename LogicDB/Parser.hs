@@ -43,7 +43,7 @@ lineTokenize :: String -> [String]
 lineTokenize = filter (not . blank) . indentMToTokens 
                . foldl appendIndentM emptyIndentM . map (++ "\n") . lines
     where
-    blank = all Char.isSpace
+    blank = (||) <$> all Char.isSpace <*> ("//" `isPrefixOf`)
 
 
 tok :: Parser a -> Parser a
